@@ -1,6 +1,9 @@
 from mido import MidiFile
 import numpy as np
+import matplotlib.pyplot as plt
+from wav import to_wav
 
+bps = 120
 
 def get_note_from_idx(idx):
 	note = int(np.mod(idx,12))
@@ -8,16 +11,13 @@ def get_note_from_idx(idx):
 	return note,octave
 
 """
-	note is 0-11, where each step is a half step through an entire octave.
+	note is in half steps from C0, where each step is a half step through an entire octave.
 	so c, c#, d, d#
-	taken from tone.c
+	taken from tone.c. modified to remove octave as an argument
 """
-def get_note_freq(note, octave):
-	NOTES_PER_OCTAVE = 12
-	step = ((NOTES_PER_OCTAVE*octave+note))
+def get_note_freq(step):
 	base = 1.05946309
 	exp = 1.0
-	# for(int i = 0; i < step; i++)
 	for i in range(0,step):
 		exp = base*exp
 	return 16.35*exp
@@ -25,9 +25,10 @@ def get_note_freq(note, octave):
 note_lookup = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
 
 
-# mid = MidiFile('ChickenFried.mid')
-mid = MidiFile('Bass_sample.mid')
+mid = MidiFile('ChickenFried.mid')
+# mid = MidiFile('Bass_sample.mid')
 print(mid.ticks_per_beat)
+
 notelist = []
 for i, track in enumerate(mid.tracks):
 	print("Track "+str(i), str(track.name))
@@ -56,4 +57,25 @@ for i, msg in enumerate(track):
 						break
 		
 				
-				
+Fs = 48e3
+endtick = notelist[len(notelist)-1][2]
+endtime = endtick/mid.ticks_per_beat
+t = np.linspace(0, endtime, int(endtime*Fs))
+output = 0*t
+
+print(endtime)
+
+
+for tidx in range(0,len(t)):
+	time = t[tidx]
+	for i in range(0,len(notelist)):
+		st = notelist[i][1]/mid.ticks_per_beat
+		et = notelist[i][2]/mid.ticks_per_beat
+		if(time > st and  time < et):
+			output[tidx]+=np.sin(2*np.pi*time*get_note_freq(notelist[i][0]))
+
+to_wav(t,output,'nylon_chicken.wav')
+
+fig,ax = plt.subplots()
+ax.plot(t,output)
+plt.show()
