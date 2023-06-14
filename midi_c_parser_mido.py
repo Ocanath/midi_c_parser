@@ -25,8 +25,8 @@ def get_note_freq(note, octave):
 note_lookup = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
 
 
-mid = MidiFile('ChickenFried.mid')
-# mid = MidiFile('Bass_sample.mid')
+# mid = MidiFile('ChickenFried.mid')
+mid = MidiFile('Bass_sample.mid')
 print(mid.ticks_per_beat)
 notelist = []
 for i, track in enumerate(mid.tracks):
@@ -49,8 +49,8 @@ for i, msg in enumerate(track):
 		if(msg.velocity > 0):
 			note,octave = get_note_from_idx(msg.note)
 			for j in range(i,len(track)):
-				if( ("note_on" in str(track[j]) or "note_off" in str(track[j]) ) and track[j].is_meta == 0):
-					if(track[j].note == msg.note and track[j].velocity == 0):
+				if(track[j].is_meta == 0 and (("note_on" in str(track[j])) or ("note_off" in str(track[j]))) ):
+					if(track[j].note == msg.note and ( (("note_on" in str(track[j])) and track[j].velocity == 0) or ("note_off" in str(track[j])) )  ):
 						notelist.append([msg.note, time, time+track[j].time])
 						print(note_lookup[note]+str(octave), "(" + str(note+12*octave) + ")", "start time = ", time, "end time = ", time+track[j].time, "duration = ", track[j].time, msg.velocity)
 						break
